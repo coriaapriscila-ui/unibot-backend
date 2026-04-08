@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulación Integración UNCAUS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        /* ESTILOS BÁSICOS */
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Poppins', sans-serif; }
+        
+        iframe.background-site {
+            width: 100%;
+            height: 100%;
+            border: none;
+            position: absolute;
+            z-index: 1;
+        }
+
+        .unibot-widget-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999; 
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .unibot-toggle-btn {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: white;
+            border: 3px solid #8cc63f;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.3s;
+            overflow: hidden;
+            padding: 0;
+            margin-top: 10px;
+        }
+        .unibot-toggle-btn:hover { transform: scale(1.1); }
+        .unibot-toggle-btn img { width: 100%; height: 100%; object-fit: cover; }
+
+    .unibot-window {
+            display: none; 
+            width: 400px;       /* ANTES: 350px - AHORA: 400px (Más ancho) */
+            max-width: 92vw;
+            height: 650px;      /* ANTES: 550px - AHORA: 650px (Más alto) */
+            max-height: 85vh;
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .unibot-header {
+            background-color: #0f4c81;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+        }
+        .unibot-header-controls span { 
+            cursor: pointer; 
+            margin-left: 10px; 
+            font-size: 1.2rem;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+        .unibot-header-controls span:hover { opacity: 1; }
+
+        .unibot-body {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background-color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #messagesContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-bottom: 10px;
+        }
+
+        .welcome-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: auto; 
+        }
+        .robot-avatar-container {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 3px solid #8cc63f;
+            padding: 5px;
+            margin-bottom: 15px;
+            background: white;
+        }
+        .robot-avatar-container img { width: 100%; height: 100%; object-fit: contain; }
+        .welcome-title { color: #0f4c81; font-size: 1.4rem; font-weight: 700; }
+        
+        .unibot-footer {
+            padding: 15px;
+            border-top: 1px solid #eee;
+            background: white;
+        }
+        .input-container {
+            background-color: #f0f0f0;
+            border-radius: 30px;
+            padding: 5px 5px 5px 20px;
+            display: flex;
+            align-items: center;
+        }
+        .input-container input {
+            flex: 1;
+            border: none;
+            background: none;
+            outline: none;
+            font-size: 0.95rem;
+        }
+        .send-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #8cc63f;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .send-btn svg { width: 18px; height: 18px; fill: white; }
+    </style>
+</head>
+<body>
+
+    <iframe class="background-site" src="https://academica.uncaus.edu.ar/areas/gestion-de-alumnos/"></iframe>
+
+    <div class="unibot-widget-container">
+        
+        <div class="unibot-window" id="chatWindow">
+            <div class="unibot-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:30px; height:30px; background:white; border-radius:50%; padding:2px; overflow:hidden;">
+                        <img src="robot..png" style="width:100%; height:100%; object-fit:cover;">
+                    </div>
+                    UniBot
+                </div>
+                <div class="unibot-header-controls">
+                    <span onclick="toggleChat()" title="Minimizar">&#9472;</span> 
+                    <span onclick="resetChat()" title="Reiniciar chat">&#x21bb;</span>
+                    <span onclick="toggleChat()" title="Cerrar">&#10005;</span> 
+                </div>
+            </div>
+            
+            <div class="unibot-body" id="chatBody">
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="robot-avatar-container">
+                        <img src="robot..png" alt="UniBot Avatar">
+                    </div>
+                    <div class="welcome-title">¡Hola! Soy UniBot</div>
+                    <div class="welcome-subtitle">Estoy aquí para ayudarte.</div>
+                </div>
+                <div id="messagesContainer"></div>
+            </div>
+
+            <div class="unibot-footer">
+                <div class="input-container">
+                    <input type="text" id="userInput" placeholder="Escribe tu consulta..." onkeypress="handleKeyPress(event)" autocomplete="off">
+                    <button class="send-btn" onclick="sendMessage()">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <button class="unibot-toggle-btn" onclick="toggleChat()">
+            <img src="robot..png" alt="Abrir Chat">
+        </button>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000/chat";
+        
+        const chatWindow = document.getElementById('chatWindow');
+        const welcomeScreen = document.getElementById('welcomeScreen');
+        const messagesContainer = document.getElementById('messagesContainer');
+        const userInput = document.getElementById('userInput');
+        const chatBody = document.getElementById('chatBody');
+        let isFirstMessage = true;
+
+        function toggleChat() {
+            if (chatWindow.style.display === 'flex') {
+                chatWindow.style.display = 'none';
+            } else {
+                chatWindow.style.display = 'flex';
+                setTimeout(() => userInput.focus(), 50); 
+            }
+        }
+
+        function resetChat() {
+            messagesContainer.innerHTML = '';
+            welcomeScreen.style.display = 'flex';
+            isFirstMessage = true;
+            userInput.value = '';
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        }
+
+        function formatMessage(text) {
+            if (!text) return "";
+            let formatted = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            const lines = formatted.split('\n');
+            let inList = false;
+            let resultHtml = "";
+
+            lines.forEach(line => {
+                const trimmed = line.trim();
+                if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+                    if (!inList) { resultHtml += "<ul>"; inList = true; }
+                    resultHtml += `<li>${trimmed.substring(2)}</li>`;
+                } else {
+                    if (inList) { resultHtml += "</ul>"; inList = false; }
+                    if (trimmed.length > 0) resultHtml += line + "<br>";
+                }
+            });
+            if (inList) resultHtml += "</ul>";
+            return resultHtml;
+        }
+
+        async function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+
+            if (isFirstMessage) {
+                welcomeScreen.style.display = 'none';
+                isFirstMessage = false;
+            }
+
+            addMessage(text, 'user-msg');
+            userInput.value = '';
+
+            // Guardamos el ID del mensaje "Escribiendo..."
+            const loadingId = addMessage('Escribiendo...', 'loading-msg');
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        pregunta: text,
+                        session_id: "web_user_" + Date.now()
+                    })
+                });
+
+                if (!response.ok) throw new Error("Error del servidor");
+                const data = await response.json();
+
+                // Ahora sí borraremos el mensaje CORRECTO
+                const loader = document.getElementById(loadingId);
+                if (loader) loader.remove();
+
+                const htmlResponse = formatMessage(data.respuesta);
+                addMessage(htmlResponse, 'bot-msg', true);
+
+            } catch (error) {
+                console.error(error);
+                const loader = document.getElementById(loadingId);
+                if(loader) loader.remove();
+                addMessage("⚠️ Error de conexión.", 'bot-msg');
+            }
+        }
+
+        function addMessage(text, className, isHTML = false) {
+            const msgDiv = document.createElement('div');
+            
+            // ESTILOS FORZADOS
+            msgDiv.style.padding = "10px 15px";
+            msgDiv.style.borderRadius = "15px";
+            msgDiv.style.maxWidth = "80%";
+            msgDiv.style.wordWrap = "break-word";
+            msgDiv.style.fontSize = "0.9rem";
+            msgDiv.style.marginBottom = "5px";
+            msgDiv.style.display = "block";
+
+            if (className === 'user-msg') {
+                msgDiv.style.backgroundColor = "#0f4c81"; 
+                msgDiv.style.color = "white";
+                msgDiv.style.alignSelf = "flex-end";     
+                msgDiv.style.marginLeft = "auto";        
+                msgDiv.style.borderBottomRightRadius = "2px";
+            } else if (className === 'bot-msg') {
+                msgDiv.style.backgroundColor = "#f4f7f6";
+                msgDiv.style.color = "#333";
+                msgDiv.style.alignSelf = "flex-start";   
+                msgDiv.style.marginRight = "auto";       
+                msgDiv.style.borderBottomLeftRadius = "2px";
+            } else if (className === 'loading-msg') {
+                msgDiv.style.color = "#888";
+                msgDiv.style.fontStyle = "italic";
+                msgDiv.style.fontSize = "0.8rem";
+            }
+
+            if (isHTML) msgDiv.innerHTML = text;
+            else msgDiv.textContent = text;
+            
+            // --- CORRECCIÓN AQUÍ: ID ÚNICO ---
+            // Le agregamos un número aleatorio al final para que nunca se repita
+            msgDiv.id = 'msg-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+            
+            messagesContainer.appendChild(msgDiv);
+            
+            setTimeout(() => {
+                chatBody.scrollTop = chatBody.scrollHeight;
+            }, 10);
+
+            return msgDiv.id;
+        }
+    </script>
+</body>
+</html>
